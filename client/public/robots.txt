@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Sitemap: https://hydrationcalculator.replit.app/sitemap.xml
