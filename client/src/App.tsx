@@ -20,6 +20,7 @@ import { Privacy } from "@/pages/Privacy";
 import { Terms } from "@/pages/Terms";
 import { Calculator } from "@/pages/Calculator";
 import { AdminReplies } from "@/pages/AdminReplies";
+import { Disclaimer } from "@/pages/Disclaimer";
 
 function AppContent() {
   const { user, isLoading: authLoading } = useAuth();
@@ -64,6 +65,7 @@ function App() {
           <Route path="/contact" component={Contact} />
           <Route path="/privacy" component={Privacy} />
           <Route path="/terms" component={Terms} />
+          <Route path="/disclaimer" component={Disclaimer} />
           <Route path="/admin/replies" component={AdminReplies} />
           
           {/* App routes - user auth required */}

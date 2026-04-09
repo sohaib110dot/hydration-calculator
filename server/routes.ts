@@ -36,6 +36,12 @@ export async function registerRoutes(
       const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 
       if (supabaseUrl && supabaseAnonKey) {
+        const payload = {
+          name: input.name,
+          email: input.email,
+          message: `${input.subject}: ${input.message}`,
+          created_at: new Date().toISOString(),
+        };
         fetch(`${supabaseUrl}/rest/v1/contact_messages`, {
           method: "POST",
           headers: {
@@ -44,13 +50,7 @@ export async function registerRoutes(
             "apikey": supabaseAnonKey,
             "Prefer": "return=minimal",
           },
-          body: JSON.stringify({
-            name: input.name,
-            email: input.email,
-            subject: input.subject,
-            message: input.message,
-            created_at: new Date().toISOString(),
-          }),
+          body: JSON.stringify(payload),
         })
           .then(async (r) => {
             if (!r.ok) {
