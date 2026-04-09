@@ -4,20 +4,29 @@ import { Footer } from "@/components/Footer";
 import {
   Droplet, RotateCcw, Copy, Check, Clock, AlertCircle,
   ChevronDown, ChevronRight, ChevronLeft, User, Activity,
-  Thermometer, Target, Baby, Scale, ArrowRight
+  Thermometer, Target, Baby, Scale, ArrowRight, Sparkles
 } from "lucide-react";
 import { setPageMeta } from "@/lib/seo";
 
 const HYDRATION_TIPS = [
-  "Start your morning with a full glass of water before coffee or tea.",
-  "Keep a reusable water bottle on your desk as a visual reminder.",
-  "Drink a glass of water before each meal — it helps with digestion too.",
-  "Set hourly phone reminders until drinking water becomes habit.",
-  "Add slices of lemon, cucumber, or mint to make water more enjoyable.",
-  "Drink an extra glass after every 30 minutes of exercise.",
-  "Check your urine color — pale yellow means you're well-hydrated.",
-  "Eat water-rich foods like cucumber, watermelon, and celery to supplement intake.",
+  { text: "Start your morning with a full glass of water before coffee or tea.", icon: "🌅" },
+  { text: "Keep a reusable water bottle on your desk as a visual reminder.", icon: "🍶" },
+  { text: "Drink a glass of water before each meal — it helps with digestion too.", icon: "🥗" },
+  { text: "Set hourly phone reminders until drinking water becomes habit.", icon: "⏰" },
+  { text: "Add slices of lemon, cucumber, or mint to make water more enjoyable.", icon: "🍋" },
+  { text: "Drink an extra glass after every 30 minutes of exercise.", icon: "🏃" },
+  { text: "Check your urine color — pale yellow means you're well-hydrated.", icon: "✅" },
+  { text: "Eat water-rich foods like cucumber, watermelon, and celery.", icon: "🥒" },
+  { text: "Drink more water in hot weather — your body loses fluids faster. ☀️", icon: "☀️" },
+  { text: "Carry a water bottle everywhere you go — out of sight, out of mind.", icon: "💧" },
 ];
+
+const CLIMATE_TIPS: Record<string, string> = {
+  mild: "Mild weather — stick to your calculated intake for balanced hydration.",
+  warm: "Warm weather increases sweat. Add an extra glass or two throughout the day. ☀️",
+  hot: "Hot weather means more fluid loss! Drink water every 30 minutes and avoid sugary drinks. 🌡️",
+  very_hot: "Extreme heat warning! Drink water frequently, stay in shade, and consider electrolytes. 🔥",
+};
 
 interface CalcResult {
   liters: number;
@@ -25,7 +34,7 @@ interface CalcResult {
   glasses: number;
   cups: number;
   reminderHours: number;
-  tip: string;
+  tip: { text: string; icon: string };
   breakdown: { label: string; value: string }[];
 }
 
@@ -87,14 +96,14 @@ function OptionCard({
       type="button"
       onClick={onClick}
       data-testid={testId}
-      className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border-2 text-left transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${
+      className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border-2 text-left transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${
         selected
-          ? "border-blue-500 bg-blue-50 shadow-sm"
+          ? "border-blue-500 bg-blue-50 shadow-md scale-[1.01]"
           : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/50"
       }`}
     >
       {icon && (
-        <span className={`shrink-0 ${selected ? "text-blue-600" : "text-slate-400"}`}>
+        <span className={`shrink-0 text-xl ${selected ? "text-blue-600" : "text-slate-400"}`}>
           {icon}
         </span>
       )}
@@ -108,10 +117,10 @@ function OptionCard({
           </span>
         )}
       </span>
-      <span className={`shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
+      <span className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
         selected ? "border-blue-500 bg-blue-500" : "border-slate-300"
       }`}>
-        {selected && <span className="w-1.5 h-1.5 rounded-full bg-white block" />}
+        {selected && <span className="w-2 h-2 rounded-full bg-white block" />}
       </span>
     </button>
   );
@@ -132,19 +141,19 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
         return (
           <div key={i} className="flex items-center">
             <div className="flex flex-col items-center gap-1">
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${
-                isDone ? "bg-blue-600 text-white" :
-                isActive ? "bg-blue-600 text-white ring-4 ring-blue-100" :
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${
+                isDone ? "bg-blue-600 text-white shadow-md" :
+                isActive ? "bg-blue-600 text-white ring-4 ring-blue-100 shadow-md" :
                 "bg-slate-200 text-slate-500"
               }`}>
                 {isDone ? <Check className="w-4 h-4" /> : step.icon}
               </div>
-              <span className={`text-xs font-medium hidden sm:block ${
+              <span className={`text-xs font-semibold hidden sm:block ${
                 isActive ? "text-blue-600" : isDone ? "text-blue-500" : "text-slate-400"
               }`}>{step.label}</span>
             </div>
             {i < steps.length - 1 && (
-              <div className={`w-12 sm:w-20 h-0.5 mx-1 sm:mx-2 mb-4 sm:mb-3 transition-all duration-300 ${
+              <div className={`w-12 sm:w-20 h-1 mx-1 sm:mx-2 mb-4 sm:mb-3 rounded-full transition-all duration-500 ${
                 stepNum < current ? "bg-blue-500" : "bg-slate-200"
               }`} />
             )}
@@ -159,9 +168,9 @@ function WaterGauge({ liters, maxLiters = 5 }: { liters: number; maxLiters?: num
   const pct = Math.min((liters / maxLiters) * 100, 100);
   const color = pct < 40 ? "#60a5fa" : pct < 70 ? "#3b82f6" : "#1d4ed8";
   return (
-    <div className="flex flex-col items-center gap-3 select-none">
+    <div className="flex flex-col items-center gap-2 select-none">
       <div className="relative w-20 h-32 sm:w-24 sm:h-40">
-        <svg viewBox="0 0 80 130" className="w-full h-full drop-shadow-md" aria-hidden>
+        <svg viewBox="0 0 80 130" className="w-full h-full drop-shadow-lg" aria-hidden>
           <defs>
             <clipPath id="bottleClip">
               <path d="M26,8 L54,8 L60,22 L66,30 L66,118 Q66,124 60,124 L20,124 Q14,124 14,118 L14,30 L20,22 Z" />
@@ -170,18 +179,52 @@ function WaterGauge({ liters, maxLiters = 5 }: { liters: number; maxLiters?: num
           <path d="M26,8 L54,8 L60,22 L66,30 L66,118 Q66,124 60,124 L20,124 Q14,124 14,118 L14,30 L20,22 Z"
             fill="white" stroke="#cbd5e1" strokeWidth="2" />
           <rect x="14" y={124 - (94 * pct / 100)} width="52" height={94 * pct / 100}
-            fill={color} clipPath="url(#bottleClip)" opacity="0.85">
-            <animate attributeName="y" from="124" to={124 - (94 * pct / 100)} dur="1s" fill="freeze" />
-            <animate attributeName="height" from="0" to={94 * pct / 100} dur="1s" fill="freeze" />
+            fill={color} clipPath="url(#bottleClip)" opacity="0.9">
+            <animate attributeName="y" from="124" to={124 - (94 * pct / 100)} dur="1.2s" fill="freeze" />
+            <animate attributeName="height" from="0" to={94 * pct / 100} dur="1.2s" fill="freeze" />
           </rect>
-          <path d="M14,70 Q27,65 40,70 Q53,75 66,70" fill="none" stroke="white" strokeWidth="1.5" opacity="0.5" />
+          <path d="M14,70 Q27,65 40,70 Q53,75 66,70" fill="none" stroke="white" strokeWidth="2" opacity="0.6" />
           <path d="M26,8 L54,8 L60,22 L66,30 L66,118 Q66,124 60,124 L20,124 Q14,124 14,118 L14,30 L20,22 Z"
             fill="none" stroke="#94a3b8" strokeWidth="2" />
           <rect x="28" y="2" width="24" height="8" rx="2" fill="#94a3b8" />
         </svg>
       </div>
-      <div className="text-center">
-        <span className="text-xs text-slate-500 font-medium">{Math.round(pct)}% of max daily</span>
+      <span className="text-xs text-blue-100 font-semibold bg-white/20 px-2 py-0.5 rounded-full">
+        {Math.round(pct)}% of max
+      </span>
+    </div>
+  );
+}
+
+function GlassIcons({ glasses }: { glasses: number }) {
+  const show = Math.min(glasses, 16);
+  return (
+    <div className="flex flex-wrap gap-1.5 justify-center mt-1">
+      {Array.from({ length: show }).map((_, i) => (
+        <span key={i} className="text-xl leading-none" title="1 glass (250ml)">🥛</span>
+      ))}
+      {glasses > 16 && (
+        <span className="text-xs text-blue-400 self-center font-semibold">+{glasses - 16} more</span>
+      )}
+    </div>
+  );
+}
+
+function ProgressBar({ liters, maxLiters = 5 }: { liters: number; maxLiters?: number }) {
+  const pct = Math.min((liters / maxLiters) * 100, 100);
+  const color = pct < 40 ? "from-sky-400 to-blue-400" : pct < 70 ? "from-blue-500 to-blue-600" : "from-blue-600 to-indigo-600";
+  return (
+    <div className="w-full">
+      <div className="flex justify-between text-xs text-blue-200 mb-1.5 font-medium">
+        <span>0L</span>
+        <span>{liters}L daily goal</span>
+        <span>{maxLiters}L max</span>
+      </div>
+      <div className="h-3 bg-white/20 rounded-full overflow-hidden">
+        <div
+          className={`h-full bg-gradient-to-r ${color} rounded-full transition-all duration-1000 ease-out`}
+          style={{ width: `${pct}%` }}
+        />
       </div>
     </div>
   );
@@ -202,29 +245,50 @@ export function Calculator() {
   const [result, setResult] = useState<CalcResult | null>(null);
   const [copied, setCopied] = useState(false);
   const [showBreakdown, setShowBreakdown] = useState(false);
+  const [calcAnimating, setCalcAnimating] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const topRef = useRef<HTMLDivElement>(null);
 
   const scrollToTop = () => topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   const goToStep = (n: number) => { setStep(n); scrollToTop(); };
 
+  const validateStep1 = () => {
+    const errs: Record<string, string> = {};
+    const min = unit === "kg" ? 20 : 44;
+    const max = unit === "kg" ? 250 : 550;
+    if (!weightVal || weightVal < min || weightVal > max) {
+      errs.weight = `Please enter a valid weight (${min}–${max} ${unit})`;
+    }
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleNextStep1 = () => {
+    if (validateStep1()) goToStep(2);
+  };
+
   const handleCalculate = () => {
-    const r = calcWaterIntake(weightVal, unit, gender, age, activity, climate, pregnancy, goal);
-    setResult(r);
-    setStep(3);
-    scrollToTop();
+    setCalcAnimating(true);
+    setTimeout(() => {
+      const r = calcWaterIntake(weightVal, unit, gender, age, activity, climate, pregnancy, goal);
+      setResult(r);
+      setStep(3);
+      scrollToTop();
+      setCalcAnimating(false);
+    }, 600);
   };
 
   const handleReset = () => {
     setWeightVal(70); setUnit("kg"); setGender("male"); setAge(30);
     setActivity("moderate"); setClimate("mild"); setPregnancy("none"); setGoal("basic");
-    setResult(null); setShowBreakdown(false); setStep(1); scrollToTop();
+    setResult(null); setShowBreakdown(false); setStep(1); setErrors({}); scrollToTop();
   };
 
   const handleCopy = () => {
     if (!result) return;
     navigator.clipboard.writeText(
-      `My daily hydration goal: ${result.liters}L (${result.ml}ml) — about ${result.glasses} glasses or ${result.cups} cups per day. Reminder every ${result.reminderHours} hours.`
+      `My daily hydration goal: ${result.liters}L (${result.ml}ml) — about ${result.glasses} glasses per day. Reminder every ${result.reminderHours} hours.`
     );
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
@@ -233,24 +297,22 @@ export function Calculator() {
   return (
     <>
       <Navbar />
-
       {/* Hero */}
-      <section className="bg-gradient-to-br from-blue-600 to-blue-800 text-white py-10 px-4 sm:px-6">
+      <section className="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-900 text-white py-12 px-4 sm:px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <div className="flex justify-center mb-4">
-            <div className="bg-white/15 rounded-full p-3.5">
-              <Droplet className="w-9 h-9 text-blue-100" />
+          <div className="flex justify-center mb-5">
+            <div className="bg-white/15 rounded-full p-4 shadow-lg">
+              <Droplet className="w-10 h-10 text-blue-100" />
             </div>
           </div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 leading-tight">
             Hydration Calculator
           </h1>
-          <p className="text-blue-100 text-base max-w-lg mx-auto">
+          <p className="text-blue-100 text-base sm:text-lg max-w-lg mx-auto">
             Answer a few questions and get your personalized daily water intake in seconds.
           </p>
         </div>
       </section>
-
       {/* Ad Banner */}
       <div className="bg-slate-50 border-b border-slate-200 py-2 px-4 text-center">
         <p className="text-slate-400 text-xs uppercase tracking-widest">Advertisement</p>
@@ -258,31 +320,30 @@ export function Calculator() {
           <p className="text-slate-300 text-xs">[Google AdSense — 728×90 Leaderboard]</p>
         </div>
       </div>
-
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8" ref={topRef}>
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-10 text-[25px]" ref={topRef}>
 
         {/* Step Indicator */}
         <StepIndicator current={step} total={3} />
 
         {/* ── Step 1: Body Info ── */}
         {step === 1 && (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-50 to-sky-50 border-b border-slate-100 px-6 py-5">
+          <div className="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
               <div className="flex items-center gap-3">
-                <div className="bg-blue-600 rounded-lg p-2">
-                  <User className="w-5 h-5 text-white" />
+                <div className="bg-white/20 rounded-xl p-2.5">
+                  <User className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-slate-800">Step 1: Body Information</h2>
-                  <p className="text-sm text-slate-500">Tell us about your body to personalise your results.</p>
+                  <h2 className="text-xl font-bold text-white">Step 1: Body Information</h2>
+                  <p className="text-blue-100 text-sm mt-0.5">Tell us about your body to personalise your results.</p>
                 </div>
               </div>
             </div>
 
-            <div className="px-6 py-6 space-y-6">
+            <div className="px-6 py-7 space-y-7">
               {/* Weight */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                <label className="block text-sm font-bold text-slate-700 mb-2.5 flex items-center gap-2">
                   <Scale className="w-4 h-4 text-blue-500" /> Body Weight
                 </label>
                 <div className="flex gap-2">
@@ -291,10 +352,12 @@ export function Calculator() {
                     min={unit === "kg" ? 20 : 44}
                     max={unit === "kg" ? 250 : 550}
                     value={weightVal}
-                    onChange={(e) => setWeightVal(Number(e.target.value))}
+                    onChange={(e) => { setWeightVal(Number(e.target.value)); setErrors({}); }}
                     data-testid="input-weight"
-                    className="flex-1 px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-blue-400 text-slate-800 text-base font-semibold transition-colors"
-                    placeholder="Enter weight"
+                    className={`flex-1 px-4 py-3.5 border-2 rounded-xl focus:outline-none text-slate-800 text-lg font-bold transition-colors ${
+                      errors.weight ? "border-red-400 bg-red-50 focus:border-red-500" : "border-slate-200 focus:border-blue-500"
+                    }`}
+                    placeholder={`Enter weight in ${unit}`}
                   />
                   <div className="flex rounded-xl border-2 border-slate-200 overflow-hidden">
                     {["kg", "lbs"].map((u) => (
@@ -309,7 +372,7 @@ export function Calculator() {
                               : Math.round(weightVal / 2.205));
                           }
                         }}
-                        className={`px-4 py-3 text-sm font-bold transition-all ${
+                        className={`px-5 py-3.5 text-sm font-bold transition-all ${
                           unit === u ? "bg-blue-600 text-white" : "bg-white text-slate-500 hover:bg-slate-50"
                         }`}
                       >
@@ -318,17 +381,23 @@ export function Calculator() {
                     ))}
                   </div>
                 </div>
+                {errors.weight && (
+                  <p className="mt-2 text-sm text-red-500 flex items-center gap-1.5">
+                    <AlertCircle className="w-4 h-4 shrink-0" /> {errors.weight}
+                  </p>
+                )}
               </div>
 
               {/* Gender */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                <label className="block text-sm font-bold text-slate-700 mb-2.5 flex items-center gap-2">
                   <User className="w-4 h-4 text-blue-500" /> Gender
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <OptionCard
                     selected={gender === "male"}
                     onClick={() => setGender("male")}
+                    icon={<span>👨</span>}
                     label="Male"
                     sublabel="Standard male hydration"
                     testId="select-gender-male"
@@ -336,6 +405,7 @@ export function Calculator() {
                   <OptionCard
                     selected={gender === "female"}
                     onClick={() => setGender("female")}
+                    icon={<span>👩</span>}
                     label="Female"
                     sublabel="Adjusted for women"
                     testId="select-gender-female"
@@ -345,19 +415,19 @@ export function Calculator() {
 
               {/* Age */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                <label className="block text-sm font-bold text-slate-700 mb-2.5 flex items-center gap-2">
                   <User className="w-4 h-4 text-blue-500" />
                   Age
-                  <span className="ml-auto text-blue-600 font-bold text-base">{age} years</span>
+                  <span className="ml-auto text-blue-600 font-bold text-lg bg-blue-50 px-3 py-0.5 rounded-lg">{age} years</span>
                 </label>
                 <div className="px-1">
                   <input
                     type="range" min={5} max={90} step={1} value={age}
                     onChange={(e) => setAge(Number(e.target.value))}
                     data-testid="input-age"
-                    className="w-full h-2 accent-blue-600 cursor-pointer"
+                    className="w-full h-2.5 accent-blue-600 cursor-pointer rounded-full"
                   />
-                  <div className="flex justify-between text-xs text-slate-400 mt-1.5 px-0.5">
+                  <div className="flex justify-between text-xs text-slate-400 mt-2 px-0.5">
                     <span>5</span>
                     <span>Under 18</span>
                     <span>Adult</span>
@@ -367,36 +437,37 @@ export function Calculator() {
                 </div>
                 <div className="mt-3 flex gap-2">
                   {[
-                    { label: "Teen", range: "5–17", val: 15 },
-                    { label: "Adult", range: "18–54", val: 30 },
-                    { label: "Senior", range: "55+", val: 60 },
+                    { label: "Teen", range: "5–17", val: 15, icon: "🧒" },
+                    { label: "Adult", range: "18–54", val: 30, icon: "🧑" },
+                    { label: "Senior", range: "55+", val: 60, icon: "👴" },
                   ].map((preset) => (
                     <button
                       key={preset.label}
                       type="button"
                       onClick={() => setAge(preset.val)}
-                      className={`flex-1 px-2 py-2 rounded-lg border text-xs font-semibold transition-all ${
+                      className={`flex-1 px-2 py-2.5 rounded-xl border-2 text-xs font-bold transition-all ${
                         age === preset.val
-                          ? "border-blue-400 bg-blue-50 text-blue-700"
+                          ? "border-blue-500 bg-blue-50 text-blue-700 shadow-sm"
                           : "border-slate-200 text-slate-500 hover:border-blue-200 hover:bg-blue-50/50"
                       }`}
                     >
+                      <span className="block text-base mb-0.5">{preset.icon}</span>
                       {preset.label}
-                      <span className="block text-slate-400 font-normal">{preset.range}</span>
+                      <span className="block text-slate-400 font-normal text-xs">{preset.range}</span>
                     </button>
                   ))}
                 </div>
               </div>
             </div>
 
-            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+            <div className="px-6 py-5 bg-gradient-to-r from-slate-50 to-blue-50 border-t border-slate-100 flex justify-end">
               <button
                 type="button"
-                onClick={() => goToStep(2)}
+                onClick={handleNextStep1}
                 data-testid="button-next-step1"
-                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm"
+                className="flex items-center gap-2 px-8 py-3.5 bg-blue-600 text-white rounded-xl font-bold text-base hover:bg-blue-700 active:scale-95 transition-all shadow-md hover:shadow-lg"
               >
-                Next: Lifestyle <ChevronRight className="w-4 h-4" />
+                Next: Lifestyle <ChevronRight className="w-5 h-5" />
               </button>
             </div>
           </div>
@@ -404,26 +475,26 @@ export function Calculator() {
 
         {/* ── Step 2: Lifestyle ── */}
         {step === 2 && (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-50 to-sky-50 border-b border-slate-100 px-6 py-5">
+          <div className="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
               <div className="flex items-center gap-3">
-                <div className="bg-blue-600 rounded-lg p-2">
-                  <Activity className="w-5 h-5 text-white" />
+                <div className="bg-white/20 rounded-xl p-2.5">
+                  <Activity className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-slate-800">Step 2: Lifestyle & Environment</h2>
-                  <p className="text-sm text-slate-500">Your habits and environment affect how much water you need.</p>
+                  <h2 className="text-xl font-bold text-white">Step 2: Lifestyle & Environment</h2>
+                  <p className="text-blue-100 text-sm mt-0.5">Your habits and environment affect how much water you need.</p>
                 </div>
               </div>
             </div>
 
-            <div className="px-6 py-6 space-y-6">
+            <div className="px-6 py-7 space-y-7">
               {/* Activity Level */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                <label className="block text-sm font-bold text-slate-700 mb-2.5 flex items-center gap-2">
                   <Activity className="w-4 h-4 text-blue-500" /> Activity Level
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {[
                     { val: "low", label: "Sedentary", sublabel: "Desk job, little movement", icon: "🪑" },
                     { val: "moderate", label: "Moderate", sublabel: "Light exercise 1–3×/week", icon: "🚶" },
@@ -434,7 +505,7 @@ export function Calculator() {
                       key={opt.val}
                       selected={activity === opt.val}
                       onClick={() => setActivity(opt.val)}
-                      icon={<span className="text-lg">{opt.icon}</span>}
+                      icon={<span>{opt.icon}</span>}
                       label={opt.label}
                       sublabel={opt.sublabel}
                       testId={`select-activity-${opt.val}`}
@@ -445,40 +516,46 @@ export function Calculator() {
 
               {/* Climate */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                <label className="block text-sm font-bold text-slate-700 mb-2.5 flex items-center gap-2">
                   <Thermometer className="w-4 h-4 text-blue-500" /> Climate / Weather
                 </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   {[
-                    { val: "mild", label: "Mild", icon: "🌤️" },
-                    { val: "warm", label: "Warm", icon: "☀️" },
-                    { val: "hot", label: "Hot", icon: "🌡️" },
-                    { val: "very_hot", label: "Very Hot", icon: "🔥" },
+                    { val: "mild", label: "Mild", icon: "🌤️", sub: "Under 20°C" },
+                    { val: "warm", label: "Warm", icon: "☀️", sub: "20–28°C" },
+                    { val: "hot", label: "Hot", icon: "🌡️", sub: "28–35°C" },
+                    { val: "very_hot", label: "Very Hot", icon: "🔥", sub: "35°C+" },
                   ].map((opt) => (
                     <button
                       key={opt.val}
                       type="button"
                       onClick={() => setClimate(opt.val)}
                       data-testid={`select-climate-${opt.val}`}
-                      className={`flex flex-col items-center justify-center gap-1.5 py-3.5 px-2 rounded-xl border-2 transition-all text-sm font-semibold ${
+                      className={`flex flex-col items-center justify-center gap-1.5 py-4 px-2 rounded-xl border-2 transition-all text-sm font-bold ${
                         climate === opt.val
-                          ? "border-blue-500 bg-blue-50 text-blue-700 shadow-sm"
+                          ? "border-blue-500 bg-blue-50 text-blue-700 shadow-md scale-[1.02]"
                           : "border-slate-200 text-slate-600 hover:border-blue-200 hover:bg-blue-50/40"
                       }`}
                     >
-                      <span className="text-2xl leading-none">{opt.icon}</span>
-                      <span className="text-xs font-semibold">{opt.label}</span>
+                      <span className="text-3xl leading-none">{opt.icon}</span>
+                      <span className="text-xs font-bold">{opt.label}</span>
+                      <span className="text-xs text-slate-400 font-normal">{opt.sub}</span>
                     </button>
                   ))}
+                </div>
+                {/* Climate tip */}
+                <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800 flex items-start gap-2">
+                  <span className="text-base shrink-0">💡</span>
+                  <span>{CLIMATE_TIPS[climate]}</span>
                 </div>
               </div>
 
               {/* Pregnancy */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                <label className="block text-sm font-bold text-slate-700 mb-2.5 flex items-center gap-2">
                   <Baby className="w-4 h-4 text-blue-500" /> Pregnancy / Breastfeeding
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   {[
                     { val: "none", label: "Not applicable", icon: "✗" },
                     { val: "pregnant", label: "Pregnant", icon: "🤰" },
@@ -488,7 +565,7 @@ export function Calculator() {
                       key={opt.val}
                       selected={pregnancy === opt.val}
                       onClick={() => setPregnancy(opt.val)}
-                      icon={<span className="text-lg">{opt.icon}</span>}
+                      icon={<span>{opt.icon}</span>}
                       label={opt.label}
                       testId={`select-pregnancy-${opt.val}`}
                     />
@@ -498,10 +575,10 @@ export function Calculator() {
 
               {/* Goal */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                <label className="block text-sm font-bold text-slate-700 mb-2.5 flex items-center gap-2">
                   <Target className="w-4 h-4 text-blue-500" /> Hydration Goal
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   {[
                     { val: "basic", label: "Basic Hydration", sublabel: "Stay healthy & functional", icon: "💧" },
                     { val: "fitness", label: "Fitness Performance", sublabel: "Support training & recovery", icon: "🏋️" },
@@ -511,7 +588,7 @@ export function Calculator() {
                       key={opt.val}
                       selected={goal === opt.val}
                       onClick={() => setGoal(opt.val)}
-                      icon={<span className="text-lg">{opt.icon}</span>}
+                      icon={<span>{opt.icon}</span>}
                       label={opt.label}
                       sublabel={opt.sublabel}
                       testId={`select-goal-${opt.val}`}
@@ -521,11 +598,11 @@ export function Calculator() {
               </div>
             </div>
 
-            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center gap-3">
+            <div className="px-6 py-5 bg-gradient-to-r from-slate-50 to-blue-50 border-t border-slate-100 flex justify-between items-center gap-3">
               <button
                 type="button"
                 onClick={() => goToStep(1)}
-                className="flex items-center gap-1.5 px-4 py-3 text-slate-600 bg-white border border-slate-200 rounded-xl font-semibold text-sm hover:bg-slate-50 transition-colors"
+                className="flex items-center gap-2 px-5 py-3 text-slate-600 bg-white border-2 border-slate-200 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all hover:border-slate-300"
               >
                 <ChevronLeft className="w-4 h-4" /> Back
               </button>
@@ -533,9 +610,23 @@ export function Calculator() {
                 type="button"
                 onClick={handleCalculate}
                 data-testid="button-calculate"
-                className="flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm"
+                disabled={calcAnimating}
+                className={`flex items-center gap-2.5 px-10 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl font-bold text-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl ${
+                  calcAnimating ? "opacity-80 scale-95" : "active:scale-95 hover:scale-[1.02]"
+                }`}
               >
-                Calculate My Water Intake <ArrowRight className="w-4 h-4" />
+                {calcAnimating ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Calculating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5" />
+                    Calculate Water Intake
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -546,13 +637,23 @@ export function Calculator() {
           <div className="space-y-5">
 
             {/* Main Results Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-blue-200 text-sm font-medium mb-1">Your daily water intake goal</p>
-                    <p className="text-white text-5xl font-bold tracking-tight">{result.liters}L</p>
-                    <p className="text-blue-200 text-lg font-medium mt-0.5">{result.ml.toLocaleString()} ml per day</p>
+            <div className="bg-white rounded-2xl shadow-md border border-blue-100 overflow-hidden">
+              <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 px-6 py-7">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-5">
+                  <div className="text-center sm:text-left flex-1">
+                    <p className="text-blue-200 text-sm font-semibold uppercase tracking-wide mb-2">
+                      Your daily water intake goal
+                    </p>
+                    <p className="text-white text-6xl font-bold tracking-tight leading-none mb-1">
+                      {result.liters}L
+                    </p>
+                    <p className="text-blue-100 text-xl font-semibold mt-2">
+                      You should drink <strong className="text-white">{result.liters} Liters</strong> per day
+                    </p>
+                    <p className="text-blue-200 text-base mt-1">{result.ml.toLocaleString()} ml daily</p>
+                    <div className="mt-5 max-w-xs">
+                      <ProgressBar liters={result.liters} maxLiters={5} />
+                    </div>
                   </div>
                   <WaterGauge liters={result.liters} maxLiters={5} />
                 </div>
@@ -561,53 +662,93 @@ export function Calculator() {
               {/* Metric tiles */}
               <div className="grid grid-cols-3 divide-x divide-slate-100 border-b border-slate-100">
                 {[
-                  { label: "Glasses", value: result.glasses, sub: "× 250ml" },
-                  { label: "Cups", value: result.cups, sub: "× 240ml" },
-                  { label: "Milliliters", value: result.ml.toLocaleString(), sub: "total" },
+                  { label: "Glasses", value: result.glasses, sub: "× 250ml", icon: "🥛" },
+                  { label: "Cups", value: result.cups, sub: "× 240ml", icon: "☕" },
+                  { label: "Milliliters", value: result.ml.toLocaleString(), sub: "total", icon: "💧" },
                 ].map((m, i) => (
-                  <div key={i} className="px-4 py-4 text-center">
-                    <p className="text-2xl sm:text-3xl font-bold text-blue-700">{m.value}</p>
-                    <p className="text-xs font-semibold text-slate-500 mt-0.5">{m.label}</p>
+                  <div key={i} className="px-4 py-5 text-center">
+                    <span className="text-2xl">{m.icon}</span>
+                    <p className="text-2xl sm:text-3xl font-bold text-blue-700 mt-1">{m.value}</p>
+                    <p className="text-xs font-bold text-slate-600 mt-0.5">{m.label}</p>
                     <p className="text-xs text-slate-400">{m.sub}</p>
                   </div>
                 ))}
               </div>
 
+              {/* Glass Icons Visual */}
+              <div className="px-5 py-5 border-b border-slate-100 text-center">
+                <p className="text-sm font-bold text-slate-700 mb-3">
+                  That's <span className="text-blue-600">{result.glasses} glasses</span> of water per day
+                </p>
+                <GlassIcons glasses={result.glasses} />
+              </div>
+
               {/* Reminder bar */}
-              <div className="flex items-center gap-3 px-5 py-4 bg-blue-50">
-                <div className="bg-blue-600 rounded-lg p-2 shrink-0">
-                  <Clock className="w-4 h-4 text-white" />
+              <div className="flex items-center gap-4 px-5 py-4 bg-gradient-to-r from-blue-50 to-sky-50 border-b border-slate-100">
+                <div className="bg-blue-600 rounded-xl p-2.5 shrink-0 shadow-sm">
+                  <Clock className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-slate-800">Drink reminder</p>
-                  <p className="text-sm text-slate-600">
+                  <p className="text-sm font-bold text-slate-800">Drink reminder schedule</p>
+                  <p className="text-sm text-slate-600 mt-0.5">
                     One glass every <strong className="text-blue-700">{result.reminderHours} hours</strong> during your waking hours
                   </p>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex gap-2 px-5 py-4 border-t border-slate-100">
+              <div className="flex flex-wrap gap-2 px-5 py-4">
                 <button
                   onClick={handleCopy}
                   data-testid="button-copy"
-                  className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors font-semibold text-sm"
+                  className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all font-bold text-sm active:scale-95"
                 >
                   {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
                   {copied ? "Copied!" : "Copy Results"}
                 </button>
                 <button
                   onClick={handleReset}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors font-semibold text-sm"
+                  className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all font-bold text-sm active:scale-95"
                 >
                   <RotateCcw className="w-4 h-4" /> Start Over
                 </button>
                 <button
                   onClick={() => goToStep(2)}
-                  className="flex items-center gap-2 px-4 py-2.5 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors font-semibold text-sm ml-auto"
+                  className="flex items-center gap-2 px-4 py-2.5 text-blue-600 border-2 border-blue-200 rounded-xl hover:bg-blue-50 transition-all font-bold text-sm ml-auto active:scale-95"
                 >
                   Edit Inputs
                 </button>
+              </div>
+            </div>
+
+            {/* Hydration Tip */}
+            <div className="bg-gradient-to-br from-blue-50 to-sky-50 border border-blue-200 rounded-2xl p-5 flex gap-4 shadow-sm" data-testid="result-tip">
+              <div className="text-3xl shrink-0 self-start">{result.tip.icon}</div>
+              <div>
+                <p className="text-sm font-bold text-blue-800 mb-1.5 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" /> Hydration Tip
+                </p>
+                <p className="text-sm text-slate-700 leading-relaxed">{result.tip.text}</p>
+              </div>
+            </div>
+
+            {/* Extra Tips */}
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+              <h3 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+                <span className="text-base">💡</span> More Hydration Tips
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {[
+                  { tip: "Drink more water in hot weather ☀️", icon: "🌞" },
+                  { tip: "Water before meals reduces overeating", icon: "🥗" },
+                  { tip: "Caffeinated drinks don't fully count as hydration", icon: "☕" },
+                  { tip: "Thirst means you're already slightly dehydrated", icon: "⚠️" },
+                ].map((t, i) => (
+                  <div key={i} className="flex items-start gap-2.5 bg-slate-50 rounded-xl px-3 py-2.5">
+                    <span className="text-base shrink-0">{t.icon}</span>
+                    <span className="text-xs text-slate-700 font-medium leading-relaxed">{t.tip}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -615,10 +756,10 @@ export function Calculator() {
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
               <button
                 onClick={() => setShowBreakdown(!showBreakdown)}
-                className="w-full flex items-center justify-between px-6 py-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                className="w-full flex items-center justify-between px-6 py-4 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors"
               >
                 <span className="flex items-center gap-2">
-                  <ChevronDown className={`w-4 h-4 text-blue-500 transition-transform ${showBreakdown ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`w-4 h-4 text-blue-500 transition-transform duration-200 ${showBreakdown ? "rotate-180" : ""}`} />
                   How is this calculated?
                 </span>
                 <span className="text-xs text-slate-400 font-normal">{result.breakdown.length} factors</span>
@@ -641,17 +782,6 @@ export function Calculator() {
               )}
             </div>
 
-            {/* Hydration Tip */}
-            <div className="bg-gradient-to-br from-blue-50 to-sky-50 border border-blue-200 rounded-2xl p-5 flex gap-4" data-testid="result-tip">
-              <div className="bg-blue-600 rounded-lg p-2 shrink-0 self-start">
-                <Droplet className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-blue-800 mb-1">Hydration Tip</p>
-                <p className="text-sm text-slate-700 leading-relaxed">{result.tip}</p>
-              </div>
-            </div>
-
             {/* Disclaimer */}
             <div className="flex gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3.5">
               <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
@@ -672,7 +802,7 @@ export function Calculator() {
 
         {/* ── FAQ Section ── */}
         <section className="mt-14" aria-label="Frequently Asked Questions">
-          <h2 className="text-2xl font-bold text-center text-slate-800 mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-center text-slate-800 mb-6">
             Common Questions
           </h2>
           <div className="space-y-2">
@@ -703,11 +833,11 @@ export function Calculator() {
               },
             ].map(({ q, a }, i) => (
               <details key={i} className="group bg-white border border-slate-200 rounded-xl overflow-hidden">
-                <summary className="flex items-center justify-between px-5 py-4 cursor-pointer font-semibold text-base text-slate-700 hover:text-blue-600 transition-colors list-none gap-3">
-                  <span>{q}</span>
-                  <ChevronDown className="w-4 h-4 text-blue-400 shrink-0 group-open:rotate-180 transition-transform" />
+                <summary className="flex items-center justify-between px-4 py-4 sm:px-5 cursor-pointer font-bold text-slate-700 hover:text-blue-600 transition-colors list-none gap-3">
+                  <span className="font-bold text-base sm:text-xl md:text-[30px] leading-snug">{q}</span>
+                  <ChevronDown className="w-5 h-5 text-blue-400 shrink-0 group-open:rotate-180 transition-transform duration-200" />
                 </summary>
-                <div className="px-5 pb-5 text-slate-600 text-sm leading-relaxed border-t border-slate-100 pt-4">
+                <div className="px-4 sm:px-5 pb-4 sm:pb-5 text-slate-600 text-sm sm:text-base leading-relaxed border-t border-slate-100 pt-4">
                   {a}
                 </div>
               </details>
@@ -717,13 +847,13 @@ export function Calculator() {
 
         {/* Bottom Ad */}
         <div className="mt-10 bg-slate-50 border border-slate-200 rounded-xl py-3 text-center">
-          <p className="text-slate-400 text-xs uppercase tracking-widest mb-1">Advertisement</p>
-          <div className="min-h-[50px] flex items-center justify-center max-w-4xl mx-auto" id="ad-banner-bottom">
-            <p className="text-slate-300 text-xs">[Google AdSense — 728×90 Leaderboard]</p>
+          <p className="text-slate-400 text-xs uppercase tracking-widest mb-2">Advertisement</p>
+          <div className="min-h-[90px] flex items-center justify-center" id="ad-calculator-bottom">
+            <p className="text-slate-300 text-xs">[Google AdSense — 728×90]</p>
           </div>
         </div>
-      </main>
 
+      </main>
       <Footer />
     </>
   );
